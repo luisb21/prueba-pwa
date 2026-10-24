@@ -1,0 +1,425 @@
+<title>Prueba PWA</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Prueba PWA">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  /* Layout: one-column log/checklist, like a test console on a phone screen */
+  :root {
+    --bg: #f4f5f3;
+    --surface: #ffffff;
+    --surface-sunken: #eceee9;
+    --ink: #1b2024;
+    --ink-dim: #5b6269;
+    --line: #d9dcd5;
+    --accent: #0f766e;
+    --accent-ink: #ffffff;
+    --ok: #16794f;
+    --warn: #9a5b00;
+    --err: #b3261e;
+    --mono: 'IBM Plex Mono', ui-monospace, Menlo, Consolas, monospace;
+    --display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171a;
+      --surface: #1c2024;
+      --surface-sunken: #232729;
+      --ink: #e9ebe8;
+      --ink-dim: #9aa1a2;
+      --line: #32373a;
+      --accent: #2dd4bf;
+      --accent-ink: #0b2420;
+      --ok: #4ade80;
+      --warn: #fbbf24;
+      --err: #f87171;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171a;
+    --surface: #1c2024;
+    --surface-sunken: #232729;
+    --ink: #e9ebe8;
+    --ink-dim: #9aa1a2;
+    --line: #32373a;
+    --accent: #2dd4bf;
+    --accent-ink: #0b2420;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --err: #f87171;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--display);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap {
+    max-width: 480px;
+    margin: 0 auto;
+    padding-block: 28px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  h1 {
+    font-size: 26px;
+    line-height: 1.15;
+    margin: 4px 0 0;
+    text-wrap: balance;
+    font-weight: 700;
+  }
+  .lede {
+    color: var(--ink-dim);
+    font-size: 14.5px;
+    line-height: 1.55;
+    margin: 0;
+    max-width: 38ch;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+  }
+
+  .checklist {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+  .check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-block: 12px;
+    border-bottom: 1px solid var(--line);
+    min-width: 0;
+  }
+  .check-row:last-child { border-bottom: none; }
+  .dot {
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    margin-top: 1px;
+    color: var(--ink-dim);
+    transition: border-color .2s, background .2s, color .2s;
+  }
+  .dot.ok { border-color: var(--ok); background: var(--ok); color: var(--accent-ink); }
+  .dot.warn { border-color: var(--warn); color: var(--warn); }
+  .dot.err { border-color: var(--err); color: var(--err); }
+  .check-body { min-width: 0; flex: 1; }
+  .check-title { font-weight: 600; font-size: 14.5px; }
+  .check-note {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink-dim);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  .actions { display: flex; flex-direction: column; gap: 10px; }
+  button {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 14.5px;
+    padding: 13px 16px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: var(--surface-sunken);
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  button.primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+  }
+  button:disabled {
+    opacity: 0.45;
+    cursor: default;
+  }
+  button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  button .arrow { font-family: var(--mono); opacity: 0.6; flex: none; }
+
+  .log {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-dim);
+    background: var(--surface-sunken);
+    border-radius: 10px;
+    padding: 12px 14px;
+    max-height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.5;
+  }
+  .log .line { display: block; }
+  .log .line.ok { color: var(--ok); }
+  .log .line.err { color: var(--err); }
+
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    gap: 10px;
+    padding-block: 8px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .step b { font-family: var(--mono); color: var(--ink-dim); font-weight: 500; }
+
+  .note {
+    font-size: 12.5px;
+    color: var(--ink-dim);
+    line-height: 1.5;
+    border-top: 1px dashed var(--line);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  .note strong { color: var(--ink); }
+
+  h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+    margin: 0 0 2px;
+    font-weight: 600;
+  }
+</style>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">Banco de pruebas &middot; no es ARC</div>
+    <h1>Prueba de instalación y notificaciones</h1>
+    <p class="lede">Una página genérica para ensayar, en tu iPhone, cómo se siente instalar una app web y recibir una notificación &mdash; antes de hacerlo con ARC de verdad.</p>
+  </div>
+
+  <div class="panel">
+    <h2 style="margin-bottom:10px">Estado</h2>
+    <div class="checklist" id="checklist">
+      <div class="check-row" data-check="https">
+        <div class="dot">?</div>
+        <div class="check-body">
+          <div class="check-title">Conexión segura</div>
+          <div class="check-note" data-note>comprobando&hellip;</div>
+        </div>
+      </div>
+      <div class="check-row" data-check="sw">
+        <div class="dot">?</div>
+        <div class="check-body">
+          <div class="check-title">Service worker registrado</div>
+          <div class="check-note" data-note>comprobando&hellip;</div>
+        </div>
+      </div>
+      <div class="check-row" data-check="standalone">
+        <div class="dot">?</div>
+        <div class="check-body">
+          <div class="check-title">Instalada en pantalla de inicio</div>
+          <div class="check-note" data-note>comprobando&hellip;</div>
+        </div>
+      </div>
+      <div class="check-row" data-check="perm">
+        <div class="dot">?</div>
+        <div class="check-body">
+          <div class="check-title">Permiso de notificaciones</div>
+          <div class="check-note" data-note>comprobando&hellip;</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel actions">
+    <h2>Acciones</h2>
+    <button class="primary" id="btn-permission" type="button">
+      <span>1. Pedir permiso de notificaciones</span>
+      <span class="arrow">&rarr;</span>
+    </button>
+    <button id="btn-test" type="button" disabled>
+      <span>2. Enviar notificación de prueba (5 s)</span>
+      <span class="arrow">&rarr;</span>
+    </button>
+    <div class="log" id="log"></div>
+  </div>
+
+  <div class="panel">
+    <h2 style="margin-bottom:6px">Cómo probarla bien</h2>
+    <div class="steps">
+      <div class="step"><b>1</b><span>Abrí este link en Safari (no en Chrome ni en la app de Claude) &mdash; en iOS, instalar solo funciona desde Safari.</span></div>
+      <div class="step"><b>2</b><span>Tocá el ícono de compartir (el cuadrado con la flecha hacia arriba) y elegí <strong>"Añadir a pantalla de inicio"</strong>.</span></div>
+      <div class="step"><b>3</b><span>Abrí la app desde el ícono nuevo en tu pantalla de inicio, no desde Safari.</span></div>
+      <div class="step"><b>4</b><span>Tocá "Pedir permiso" y despu&eacute;s "Enviar notificación de prueba". Bloqueá el teléfono o cambiá de app antes de que pasen los 5 segundos para verla llegar como una notificación real.</span></div>
+    </div>
+    <p class="note"><strong>Qué es y qué no es esto:</strong> esta notificación la genera tu propio teléfono al tocar el botón, sin pasar por ningún servidor &mdash; sirve para confirmar que el mecanismo de instalar + notificar funciona en tu iPhone. Una app real como ARC necesitaría además un servidor que te mande el aviso cuando ocurre algo (push de verdad), que es un paso más de infraestructura.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  var logEl = document.getElementById('log');
+  var checklist = document.getElementById('checklist');
+  var btnPermission = document.getElementById('btn-permission');
+  var btnTest = document.getElementById('btn-test');
+
+  function log(msg, kind) {
+    var line = document.createElement('span');
+    line.className = 'line' + (kind ? ' ' + kind : '');
+    var time = new Date().toLocaleTimeString('es-AR', { hour12: false });
+    line.textContent = '[' + time + '] ' + msg;
+    logEl.appendChild(line);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setCheck(name, state, note) {
+    var row = checklist.querySelector('[data-check="' + name + '"]');
+    if (!row) return;
+    var dot = row.querySelector('.dot');
+    dot.classList.remove('ok', 'warn', 'err');
+    if (state === 'ok') { dot.classList.add('ok'); dot.textContent = '✓'; }
+    else if (state === 'warn') { dot.classList.add('warn'); dot.textContent = '!'; }
+    else if (state === 'err') { dot.classList.add('err'); dot.textContent = '✕'; }
+    else { dot.textContent = '?'; }
+    row.querySelector('[data-note]').textContent = note;
+  }
+
+  var swRegistration = null;
+
+  function evaluateStandalone() {
+    var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    if (isStandalone) {
+      setCheck('standalone', 'ok', 'abierta desde la pantalla de inicio');
+    } else {
+      setCheck('standalone', 'warn', 'estás en el navegador — instalala para la prueba real');
+    }
+    return isStandalone;
+  }
+
+  function evaluatePermission() {
+    if (!('Notification' in window)) {
+      setCheck('perm', 'err', 'este navegador no soporta notificaciones');
+      return 'unsupported';
+    }
+    var perm = Notification.permission;
+    if (perm === 'granted') setCheck('perm', 'ok', 'concedido');
+    else if (perm === 'denied') setCheck('perm', 'err', 'bloqueado — revisá los ajustes de la app');
+    else setCheck('perm', 'warn', 'todavía no se pidió');
+    return perm;
+  }
+
+  function updateTestButton() {
+    var perm = evaluatePermission();
+    btnTest.disabled = !(perm === 'granted' && swRegistration);
+  }
+
+  // HTTPS check
+  if (location.protocol === 'https:' || location.hostname === 'localhost') {
+    setCheck('https', 'ok', location.protocol.replace(':', ''));
+  } else {
+    setCheck('https', 'err', 'se necesita https para notificaciones');
+  }
+
+  evaluateStandalone();
+  window.matchMedia('(display-mode: standalone)').addEventListener('change', evaluateStandalone);
+
+  updateTestButton();
+
+  // Service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').then(function (reg) {
+      log('Service worker registrado.', 'ok');
+      return navigator.serviceWorker.ready;
+    }).then(function (reg) {
+      swRegistration = reg;
+      setCheck('sw', 'ok', 'activo');
+      updateTestButton();
+    }).catch(function (err) {
+      setCheck('sw', 'err', 'no se pudo registrar');
+      log('Error registrando el service worker: ' + err.message, 'err');
+    });
+  } else {
+    setCheck('sw', 'err', 'no soportado en este navegador');
+    log('Este navegador no soporta service workers.', 'err');
+  }
+
+  btnPermission.addEventListener('click', function () {
+    if (!('Notification' in window)) {
+      log('Las notificaciones no están disponibles acá.', 'err');
+      return;
+    }
+    log('Pidiendo permiso de notificaciones…');
+    Notification.requestPermission().then(function (perm) {
+      log('Permiso: ' + perm, perm === 'granted' ? 'ok' : 'err');
+      updateTestButton();
+    });
+  });
+
+  btnTest.addEventListener('click', function () {
+    if (!swRegistration) {
+      log('El service worker todavía no está listo.', 'err');
+      return;
+    }
+    log('Notificación programada — cambiá de app o bloqueá el teléfono ahora.');
+    btnTest.disabled = true;
+    var seconds = 5;
+    var original = btnTest.querySelector('span');
+    var originalText = original.textContent;
+    var interval = setInterval(function () {
+      original.textContent = 'Enviando en ' + seconds + 's…';
+      seconds -= 1;
+      if (seconds < 0) {
+        clearInterval(interval);
+        swRegistration.active && swRegistration.active.postMessage({
+          type: 'SHOW_TEST_NOTIFICATION',
+          title: 'Prueba PWA',
+          body: 'Llegó. La instalación y las notificaciones funcionan en este teléfono.'
+        });
+        log('Notificación enviada.', 'ok');
+        original.textContent = originalText;
+        btnTest.disabled = false;
+      }
+    }, 1000);
+  });
+
+  log('Listo. Revisá el estado arriba.');
+})();
+</script>
